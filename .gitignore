@@ -1,0 +1,22 @@
+# Sensitive Security Credentials
+.env
+
+# Python Virtual Environments
+env/
+venv/
+ENV/
+
+# Python Compilation & Cache Artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Local Machine Learning Models
+*.pkl
+*.joblib
+
+# Operating System Files
+.DS_Store
+Thumbs.db

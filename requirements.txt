@@ -1,0 +1,8 @@
+langchain
+crewai
+pydantic
+pdfplumber
+pandas
+streamlit
+pypdf
+python-docx
