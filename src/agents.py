@@ -16,7 +16,12 @@ from src.algorithms import evaluate_financial_risk
 from src.tools.db_tool import check_compliance_blacklist
 
 # 1. Paste your Gemini API key here inside the quotation marks
-GEMINI_KEY = "AIzaSyC1r2DnJlJF0gX6pLxfVRw_SXwfPmj9xa0"
+import os
+from dotenv import load_dotenv
+
+# Load the keys securely from your local hidden .env file
+load_dotenv()
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 # 2. Bundle the model and the key into a unified LLM config block
 gemini_model = LLM(
