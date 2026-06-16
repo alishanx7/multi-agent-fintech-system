@@ -4,7 +4,7 @@ An enterprise-grade multi-agent orchestration system designed to automate financ
 
 ---
 
-## 🚀 System Architecture & Core Features
+##  System Architecture & Core Features
 
 The platform leverages a modular, multi-agent framework built with Python to parse financial data, interact with secure local databases, and evaluate corporate creditworthiness.
 
@@ -15,7 +15,7 @@ The platform leverages a modular, multi-agent framework built with Python to par
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```text
 ├── data/                      # Sample financial statements and unstructured documents

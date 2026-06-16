@@ -35,7 +35,7 @@ def train_risk_model():
     
     # Save model
     joblib.dump(model, model_path)
-    print(f"✅ ML Model trained and saved to: {os.path.abspath(model_path)}")
+    print(f" ML Model trained and saved to: {os.path.abspath(model_path)}")
 
 if __name__ == "__main__":
     train_risk_model()

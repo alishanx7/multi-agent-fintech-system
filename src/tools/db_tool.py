@@ -1,58 +1,65 @@
 import sqlite3
 import os
+from crewai.tools import tool
 
-DB_PATH = 'fintech_compliance.db'
+DB_PATH = "data/fintech.db"
 
 def init_compliance_db():
-    """
-    Initializes a local SQLite database and seeds a mock corporate blacklist
-    for compliance and risk screening.
-    """
+    """Initializing the SQLite database and populates a dummy blacklist for testing."""
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS corporate_blacklist (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company_name TEXT UNIQUE NOT NULL,
-        risk_reason TEXT NOT NULL
-    )
-    """)
+    # Create the blacklist table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS compliance_blacklist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company_name TEXT NOT NULL UNIQUE,
+            risk_category TEXT NOT NULL,
+            risk_score INTEGER NOT NULL,
+            details TEXT
+        )
+    ''')
     
-    # Seed initial test compliance data records safely
+    # Insert some sample mock fraudulent corporate names for your exception testing
     mock_blacklist = [
-        ('Acme Fraud Corp', 'Active ongoing AML investigation involvement'),
-        ('Shell Ventures Ltd', 'Sanctioned entity tracking matching offshore capital lines'),
-        ('Shadow Holdings', 'High volume transaction chargeback frequency failures')
+        ("Shell Corp Logistics Ltd", "Shell Company / Money Laundering", 95, "Flagged by FIU for suspicious offshore routing"),
+        ("Apex Global Logistics Solutions Pvt Ltd", "High Risk / Audit Pending", 85, "Matches company name exactly for test exception handling"),
+        ("Phantom Holdings Inc", "Tax Evasion", 90, "Global regulatory sanctions match")
     ]
     
     try:
-        cursor.executemany(
-            "INSERT OR IGNORE INTO corporate_blacklist (company_name, risk_reason) VALUES (?, ?)", 
-            mock_blacklist
-        )
+        cursor.executemany('''
+            INSERT OR IGNORE INTO compliance_blacklist (company_name, risk_category, risk_score, details)
+            VALUES (?, ?, ?, ?)
+        ''', mock_blacklist)
         conn.commit()
-    except Exception as e:
-        print(f"Database seeding note: {e}")
+    except sqlite3.Error as e:
+        print(f"Database initialization note: {e}")
     finally:
         conn.close()
 
+# Automatically initialize the database table when the file is loaded
+init_compliance_db()
 
-def check_compliance_blacklist(company_name: str) -> dict:
+
+@tool("Regulatory Compliance Screening Tool")
+def screen_corporate_entity(company_name: str) -> str:
     """
-    Queries the database to see if an applicant entity is blacklisted.
+    Queries the internal compliance database to check if a corporate entity is blacklisted.
+    Input should be a clean string representing the company name.
     """
-    init_compliance_db()  # Ensures the database and records exist before checking
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    cursor.execute(
-        "SELECT risk_reason FROM corporate_blacklist WHERE LOWER(company_name) = LOWER(?)", 
-        (company_name.strip(),)
-    )
-    result = cursor.fetchone()
+    # Perform a fuzzy matching query using SQL LIKE
+    query = "SELECT company_name, risk_category, risk_score, details FROM compliance_blacklist WHERE company_name LIKE ?"
+    cursor.execute(query, (f"%{company_name.strip()}%",))
+    match = cursor.fetchone()
     conn.close()
     
-    if result:
-        return {"status": "FAILED", "flag_reason": result[0]}
-    return {"status": "PASSED", "flag_reason": None}
+    if match:
+        # Return a structured high-risk match payload back to the agent loop
+        return f"CRITICAL_MATCH_FOUND | Company: {match[0]} | Risk Category: {match[1]} | Risk Score: {match[2]} | Details: {match[3]}"
+    
+    return "CLEAN | No compliance risks or blacklist hits detected for this entity."
